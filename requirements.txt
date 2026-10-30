@@ -1,0 +1,7 @@
+fastapi>=0.127,<1
+uvicorn>=0.40,<1
+httpx>=0.28,<1
+python-dotenv>=1.2,<2
+python-multipart>=0.0.32,<1
+Pillow>=12,<13
+python-pptx>=1.0,<2

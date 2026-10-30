@@ -1,0 +1,25 @@
+/** 验证围栏解析、流式半块、多代码块和恶意文本均作为普通内容处理。 */
+const fs = require('node:fs');
+const vm = require('node:vm');
+const assert = require('node:assert/strict');
+const source = fs.readFileSync('app/static/app.js', 'utf8');
+const start = source.indexOf('function splitCodeBlocks(');
+const end = source.indexOf('function renderAssistantContent(', start);
+const context = {};
+vm.createContext(context);
+vm.runInContext(source.slice(start, end), context);
+const parse = context.splitCodeBlocks;
+let blocks = parse('说明\n```python\nprint("你好")\n```\n结尾');
+assert.equal(blocks[1].type, 'code');
+assert.equal(blocks[1].language, 'python');
+assert.equal(blocks[1].text, 'print("你好")');
+assert.equal(blocks[1].complete, true);
+blocks = parse('```bash\necho hello');
+assert.equal(blocks[0].complete, false);
+assert.equal(blocks[0].text, 'echo hello');
+blocks = parse('~~~js\n<script>alert(1)</script>\n~~~\n```sh\nls\n```');
+assert.equal(blocks.filter(item => item.type === 'code').length, 2);
+assert.equal(blocks[0].text, '<script>alert(1)</script>');
+blocks = parse('普通文字，无代码');
+assert.equal(blocks[0].type, 'text');
+console.log('5 code block parser checks passed');
